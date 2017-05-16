@@ -71,7 +71,8 @@ static double max_second_leg_age_s     = 2.0;
 static double max_track_jump_m         = 1.0;
 static double max_meas_jump_m          = 0.75; // 1.0
 static double leg_pair_separation_m    = 1.0;
-static string fixed_frame              = "odom_combined";
+//static string fixed_frame              = "odom_combined";
+static string fixed_frame              = "mobile_base_controller/odom";
 
 static double kal_p = 4, kal_q = .002, kal_r = 10;
 static bool use_filter = true;
@@ -973,12 +974,12 @@ public:
 
     people_msgs::PositionMeasurementArray array;
     array.header.stamp = ros::Time::now();
-    if (publish_legs_)
+    if (publish_legs_ && legs.size() > 0)
     {
       array.people = legs;
       leg_measurements_pub_.publish(array);
     }
-    if (publish_people_)
+    if (publish_people_ && people.size() > 0)
     {
       array.people = people;
       people_measurements_pub_.publish(array);
