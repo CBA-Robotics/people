@@ -920,11 +920,11 @@ public:
 
     people_msgs::PositionMeasurementArray array;
     array.header.stamp = ros::Time::now();
-    if(publish_legs_){
+    if(publish_legs_ && legs.size() > 0){
       array.people = legs;
       leg_measurements_pub_.publish(array);
     }
-    if(publish_people_){
+    if(publish_people_ && people.size() > 0){
       array.people = people;
       people_measurements_pub_.publish(array);
     }
