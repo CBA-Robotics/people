@@ -254,6 +254,7 @@ public:
 
   bool use_seeds_;
   bool publish_legs_, publish_people_, publish_leg_markers_, publish_people_markers_;
+  bool no_legs_, no_people_;
   int next_p_id_;
   double leg_reliability_limit_;
   int min_points_per_group;
@@ -307,8 +308,8 @@ public:
     server_.setCallback(f);
 
     feature_id_ = 0;
+    no_legs_ = no_people_ = true;
   }
-
 
   ~LegDetector()
   {
@@ -814,8 +815,7 @@ public:
       // reliability
       double reliability = (*sf_iter)->getReliability();
 
-      if ((*sf_iter)->getReliability() > leg_reliability_limit_
-          && publish_legs_){
+      if ((*sf_iter)->getReliability() > leg_reliability_limit_ && publish_legs_) {
         people_msgs::PositionMeasurement pos;
         pos.header.stamp = scan->header.stamp;
         pos.header.frame_id = fixed_frame;
@@ -835,8 +835,8 @@ public:
         pos.covariance[7] = 0.0;
         pos.covariance[8] = 10000.0;
         pos.initialization = 0;
-	legs.push_back(pos);
-
+        legs.push_back(pos);
+        no_legs_ = false;
       }
 
       if (publish_leg_markers_){
@@ -892,7 +892,8 @@ public:
             pos.covariance[7] = 0.0;
             pos.covariance[8] = 10000.0;
             pos.initialization = 0;
-            people.push_back(pos);  
+            people.push_back(pos);
+            no_people_ = false;
           }
    
           if (publish_people_markers_){
@@ -920,13 +921,19 @@ public:
 
     people_msgs::PositionMeasurementArray array;
     array.header.stamp = ros::Time::now();
-    if(publish_legs_ && legs.size() > 0){
-      array.people = legs;
-      leg_measurements_pub_.publish(array);
+    if(publish_legs_) {
+      if (!no_legs_) { // publish no leg information only once
+        array.people = legs;
+        leg_measurements_pub_.publish(array);
+      }
+      no_legs_ = (legs.size() == 0);
     }
-    if(publish_people_ && people.size() > 0){
-      array.people = people;
-      people_measurements_pub_.publish(array);
+    if(publish_people_) {
+      if (!no_people_) {
+        array.people = people;
+        people_measurements_pub_.publish(array);
+      }
+      no_people_ = (people.size() == 0);
     }
   }
 };
